@@ -1,4 +1,6 @@
 import Fastify from "fastify";
+import { employeeRoutes } from "./modules/employess/employee.route.js";
+import { AppError } from "./utils/app-error.js";
 
 export function buildApp() {
   const app = Fastify({
@@ -10,6 +12,32 @@ export function buildApp() {
       success: true,
       message: "EggTray Management API is running",
     };
+  });
+
+  app.register(employeeRoutes, {
+    prefix: "/api",
+  });
+
+  app.setErrorHandler((error, _request, reply) => {
+    if (error instanceof AppError) {
+      return reply.status(error.statusCode).send({
+        success: false,
+        error: {
+          code: error.code,
+          message: error.message,
+        },
+      });
+    }
+
+    app.log.error(error);
+
+    return reply.status(500).send({
+      success: false,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Internal server error",
+      },
+    });
   });
 
   return app;

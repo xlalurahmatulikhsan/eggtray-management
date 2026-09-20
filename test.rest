@@ -1,0 +1,27 @@
+POST http://localhost:3000/api/employees
+Content-Type: application/json
+
+{
+  "name": "Gilang",
+  "team": "TEAM_A"
+}
+
+
+###
+GET http://localhost:3000/api/employees
+
+###
+GET http://localhost:3000/api/employees/cmua6d4j500015cv7str47c2y
+
+###
+PATCH http://localhost:3000/api/employees/cmua60gyg00005cv7itjwgu21
+Content-Type: application/json
+
+{
+  "name": "Ahmad Fauzan Hadi"
+}
+
+###
+
+
+DELETE http://localhost:3000/api/employees/cmua60gyg00005cv7itjwgu21
