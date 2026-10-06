@@ -18,6 +18,33 @@ model Employee {
   team   String
   status String @default("ACTIVE")
 
+  attendances Attendance[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  REPLACED
+  HOLIDAY
+}
+
+model Attendance {
+  id String @id @default(cuid())
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  date   DateTime
+  status AttendanceStatus
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([employeeId, date])
+  @@index([date])
 }

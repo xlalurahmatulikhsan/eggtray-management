@@ -2,7 +2,7 @@ POST http://localhost:3000/api/employees
 Content-Type: application/json
 
 {
-  "name": "Gilang",
+  "name": "Wirawadi",
   "team": "TEAM_A"
 }
 
@@ -22,6 +22,26 @@ Content-Type: application/json
 }
 
 ###
-
-
 DELETE http://localhost:3000/api/employees/cmua60gyg00005cv7itjwgu21
+
+
+
+### Create Attendance
+POST http://localhost:3000/api/attendance
+Content-Type: application/json
+
+{
+  "employeeId": "cmua6yb040000zsv7atqfrptv",
+  "date": "2026-10-06T00:00:00.000Z",
+  "status": "PRESENT",
+  "notes": "Masuk tepat waktu"
+}
+
+###
+GET http://localhost:3000/api/attendance
+
+###
+GET http://localhost:3000/api/attendance?date=2026-10-06T00:00:00.000Z
+
+###
+GET http://localhost:3000/api/attendance?employeeId=cmua6yb040000zsv7atqfrptv
