@@ -48,3 +48,75 @@ model Attendance {
   @@unique([employeeId, date])
   @@index([date])
 }
+
+model Product {
+  id           String  @id @default(cuid())
+  name         String
+  pcsPerBundle Int     @default(50)
+  isActive     Boolean @default(true)
+
+  productions       Production[]
+  stockTransactions StockTransaction[]
+  finishedStock     FinishedStock?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Production {
+  id        String @id @default(cuid())
+  productId String
+
+  product        Product  @relation(fields: [productId], references: [id])
+  date           DateTime
+  bundleQuantity Int
+  pcsQuantity    Int
+  notes          String?
+
+  stockTransaction StockTransaction?
+
+  createdAt DateTime @default(now())
+
+  @@index([date])
+  @@index([productId])
+}
+
+enum StockTransactionType {
+  PRODUCTION
+  SALE
+  DAMAGE
+  ADJUSTMENT_IN
+  ADJUSTMENT_OUT
+}
+
+model StockTransaction {
+  id        String @id @default(cuid())
+  productId String
+
+  product        Product              @relation(fields: [productId], references: [id])
+  type           StockTransactionType
+  bundleQuantity Int
+  pcsQuantity    Int
+  referenceId    String?
+  notes          String?
+
+  productionId String?     @unique
+  production   Production? @relation(fields: [productionId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([createdAt])
+}
+
+model FinishedStock {
+  id        String @id @default(cuid())
+  productId String @unique
+
+  product Product @relation(fields: [productId], references: [id])
+
+  bundleQuantity Int @default(0)
+  pcsQuantity    Int @default(0)
+
+  updatedAt DateTime @updatedAt
+}

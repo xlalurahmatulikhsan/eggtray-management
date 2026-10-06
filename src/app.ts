@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import { employeeRoutes } from "./modules/employess/employee.route.js";
 import { AppError } from "./utils/app-error.js";
 import { attendanceRoutes } from "./modules/attendance/attendance.route.js";
+import { productRoutes } from "./modules/products/product.route.js";
 
 export function buildApp() {
   const app = Fastify({
@@ -20,6 +21,10 @@ export function buildApp() {
   });
 
   app.register(attendanceRoutes, {
+    prefix: "/api",
+  });
+
+  app.register(productRoutes, {
     prefix: "/api",
   });
 

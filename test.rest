@@ -11,18 +11,18 @@ Content-Type: application/json
 GET http://localhost:3000/api/employees
 
 ###
-GET http://localhost:3000/api/employees/cmua6d4j500015cv7str47c2y
+GET http://localhost:3000/api/employees/cmua6yb040000zsv7atqfrptv
 
 ###
-PATCH http://localhost:3000/api/employees/cmua60gyg00005cv7itjwgu21
+PATCH http://localhost:3000/api/employees/cmua6yb040000zsv7atqfrptv
 Content-Type: application/json
 
 {
-  "name": "Ahmad Fauzan Hadi"
+  "name": "M Gilang",
 }
 
 ###
-DELETE http://localhost:3000/api/employees/cmua60gyg00005cv7itjwgu21
+DELETE http://localhost:3000/api/employees/cmuveagrp0000ywv7z4sqedme
 
 
 
@@ -45,3 +45,36 @@ GET http://localhost:3000/api/attendance?date=2026-10-06T00:00:00.000Z
 
 ###
 GET http://localhost:3000/api/attendance?employeeId=cmua6yb040000zsv7atqfrptv
+
+
+###
+POST http://localhost:3000/api/products
+Content-Type: application/json
+
+{
+  "name": "Papan Telur Biasa",
+  "pcsPerBundle": 50
+}
+
+###
+GET http://localhost:3000/api/products
+
+###
+PATCH http://localhost:3000/api/products/cmuwbr63y0001rov779o5mdl0
+Content-Type: application/json
+
+{
+  "name": "Papan Telur Bekas",
+  "pcsPerBundle": 50
+}
+
+###
+POST http://localhost:3000/api/productions
+Content-Type: application/json
+
+{
+  "productId": "PRODUCT_ID",
+  "date": "2026-10-06",
+  "bundleQuantity": 141,
+  "pcsQuantity": 7050
+}
