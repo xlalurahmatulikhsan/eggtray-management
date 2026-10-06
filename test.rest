@@ -68,13 +68,16 @@ Content-Type: application/json
   "pcsPerBundle": 50
 }
 
+
+
 ###
 POST http://localhost:3000/api/productions
 Content-Type: application/json
 
 {
-  "productId": "PRODUCT_ID",
+  "productId": "cmuwbr63y0001rov779o5mdl0",
   "date": "2026-10-06",
-  "bundleQuantity": 141,
-  "pcsQuantity": 7050
+  "bundleQuantity": 141
 }
+
+###
