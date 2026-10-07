@@ -52,7 +52,7 @@ POST http://localhost:3000/api/products
 Content-Type: application/json
 
 {
-  "name": "Papan Telur Biasa",
+  "name": "Papan Telur Baru",
   "pcsPerBundle": 50
 }
 
@@ -64,7 +64,7 @@ PATCH http://localhost:3000/api/products/cmuwbr63y0001rov779o5mdl0
 Content-Type: application/json
 
 {
-  "name": "Papan Telur Bekas",
+  "name": "Papan Telur Baru",
   "pcsPerBundle": 50
 }
 
@@ -75,9 +75,36 @@ POST http://localhost:3000/api/productions
 Content-Type: application/json
 
 {
-  "productId": "cmuwbr63y0001rov779o5mdl0",
-  "date": "2026-10-06",
-  "bundleQuantity": 141
+  "productId": "cmuxxcijp0000c4v7fv1ohmd4",
+  "date": "2026-10-07",
+  "bundleQuantity": 150
+}
+
+###
+GET http://localhost:3000/api/inventory
+
+###
+GET http://localhost:3000/api/inventory/cmuxxcijp0000c4v7fv1ohmd4/transactions
+
+###
+POST http://localhost:3000/api/inventory/damage
+Content-Type: application/json
+
+{
+  "productId": "cmuxxcijp0000c4v7fv1ohmd4",
+  "bundleQuantity": 5,
+  "notes": "Rusak terkena hujan"
+}
+
+###
+POST http://localhost:3000/api/inventory/adjustment
+Content-Type: application/json
+
+{
+  "productId": "cmuxxcijp0000c4v7fv1ohmd4",
+  "type": "ADJUSTMENT_IN",
+  "bundleQuantity": 2,
+  "notes": "Hasil stock opname"
 }
 
 ###

@@ -4,6 +4,7 @@ import { AppError } from "./utils/app-error.js";
 import { attendanceRoutes } from "./modules/attendance/attendance.route.js";
 import { productRoutes } from "./modules/products/product.route.js";
 import { productionRoutes } from "./modules/productions/production.route.js";
+import { inventoryRoutes } from "./modules/inventory/inventory.route.js";
 
 export function buildApp() {
   const app = Fastify({
@@ -30,6 +31,10 @@ export function buildApp() {
   });
 
   app.register(productionRoutes, {
+    prefix: "/api",
+  });
+
+  app.register(inventoryRoutes, {
     prefix: "/api",
   });
 
