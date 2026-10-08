@@ -31,7 +31,7 @@ POST http://localhost:3000/api/attendance
 Content-Type: application/json
 
 {
-  "employeeId": "cmua6yb040000zsv7atqfrptv",
+  "employeeId": "cmuygsq3z0001qsv7j7rwja3v",
   "date": "2026-10-06T00:00:00.000Z",
   "status": "PRESENT",
   "notes": "Masuk tepat waktu"
@@ -106,5 +106,50 @@ Content-Type: application/json
   "bundleQuantity": 2,
   "notes": "Hasil stock opname"
 }
+
+###
+
+### Buat periode
+POST http://localhost:3000/api/payroll/periods
+Content-Type: application/json
+
+{
+  "startDate": "2026-10-01",
+  "endDate": "2026-10-15"
+}
+
+### memasukkan payroll harian
+POST http://localhost:3000/api/payroll/daily
+Content-Type: application/json
+
+{
+  "payrollPeriodId": "cmuygr1cy0000qsv7ageza4xb",
+  "date": "2026-10-08",
+  "dayType": "NORMAL",
+  "productionBundles": 141,
+  "pcsPerBundle": 50,
+  "teamAFullEmployeeIds": [
+    "cmuzm5124000c3cv7a9c3r8tr",
+    "cmuzltoh200073cv7h401i740",
+    "cmuzltcvr00063cv7o7nlbhvi",
+    "cmuzlt5pu00053cv7zyp6wzzb"
+  ],
+  "teamAHalfEmployeeIds": [
+    "cmuzlsyaw00043cv7b0vnybb5",
+    "cmuygsq3z0001qsv7j7rwja3v"
+  ]
+}
+
+###
+GET http://localhost:3000/api/payroll/periods
+
+###
+POST http://localhost:3000/api/payroll/periods/cmuygr1cy0000qsv7ageza4xb/calculate
+
+###
+GET http://localhost:3000/api/payroll/periods/cmuygr1cy0000qsv7ageza4xb/report
+
+###
+POST http://localhost:3000/api/payroll/periods/cmuygr1cy0000qsv7ageza4xb/finalize
 
 ###

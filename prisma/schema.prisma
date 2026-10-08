@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -13,12 +8,128 @@ datasource db {
 }
 
 model Employee {
-  id     String @id @default(cuid())
+  id     String         @id @default(cuid())
   name   String
-  team   String
-  status String @default("ACTIVE")
+  team   EmployeeTeam
+  status EmployeeStatus @default(ACTIVE)
 
   attendances Attendance[]
+
+  payrollDetails PayrollEmployeeDetail[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum EmployeeTeam {
+  TEAM_A
+  TEAM_B
+}
+
+enum PayrollStatus {
+  DRAFT
+  FINALIZED
+}
+
+enum PayrollDayType {
+  NORMAL
+  HOLIDAY
+  RAIN
+  CUSTOM
+}
+
+model PayrollPeriod {
+  id String @id @default(cuid())
+
+  startDate DateTime
+  endDate   DateTime
+
+  status      PayrollStatus @default(DRAFT)
+  totalAmount Decimal       @default(0)
+
+  finalizedAt DateTime?
+
+  dailyRecords PayrollDailyRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([startDate, endDate])
+  @@index([startDate])
+  @@index([endDate])
+}
+
+model PayrollDailyRecord {
+  id String @id @default(cuid())
+
+  payrollPeriodId String
+  payrollPeriod   PayrollPeriod @relation(fields: [payrollPeriodId], references: [id])
+
+  date    DateTime
+  dayType PayrollDayType @default(NORMAL)
+
+  productionBundles Int?
+  pcsPerBundle      Int?
+
+  teamAAmount Decimal @default(0)
+  teamBAmount Decimal @default(0)
+
+  teamAManualOverride Boolean  @default(false)
+  teamARainAmount     Decimal?
+
+  notes String?
+
+  employeeDetails PayrollEmployeeDetail[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([payrollPeriodId, date])
+  @@index([date])
+}
+
+model PayrollEmployeeDetail {
+  id String @id @default(cuid())
+
+  dailyRecordId String
+  dailyRecord   PayrollDailyRecord @relation(fields: [dailyRecordId], references: [id])
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  replacedEmployeeId String?
+
+  attendanceStatus AttendanceStatus?
+
+  baseAmount      Decimal @default(0)
+  deductionAmount Decimal @default(0)
+  bonusAmount     Decimal @default(0)
+  finalAmount     Decimal @default(0)
+
+  isReplacement Boolean @default(false)
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([dailyRecordId, employeeId])
+  @@index([employeeId])
+  @@index([replacedEmployeeId])
+}
+
+model PayrollSetting {
+  id String @id @default(cuid())
+
+  teamAPricePerPcs Decimal @default(130)
+  teamADivisor     Decimal @default(5)
+
+  teamBDailyRate Decimal @default(30000)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -39,6 +150,8 @@ model Attendance {
 
   date   DateTime
   status AttendanceStatus
+
+  replacementEmployeeId String?
 
   notes String?
 

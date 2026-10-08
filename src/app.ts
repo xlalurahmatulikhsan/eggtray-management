@@ -5,6 +5,7 @@ import { attendanceRoutes } from "./modules/attendance/attendance.route.js";
 import { productRoutes } from "./modules/products/product.route.js";
 import { productionRoutes } from "./modules/productions/production.route.js";
 import { inventoryRoutes } from "./modules/inventory/inventory.route.js";
+import { payrollRoutes } from "./modules/payroll/payroll.route.js";
 
 export function buildApp() {
   const app = Fastify({
@@ -35,6 +36,10 @@ export function buildApp() {
   });
 
   app.register(inventoryRoutes, {
+    prefix: "/api",
+  });
+
+  app.register(payrollRoutes, {
     prefix: "/api",
   });
 
