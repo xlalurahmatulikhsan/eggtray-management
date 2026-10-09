@@ -24,3 +24,21 @@ export const createPayrollDailySchema = z.object({
 
   notes: z.string().max(500).optional(),
 });
+
+export const updatePayrollDailySchema = z.object({
+  dayType: z.enum(["NORMAL", "HOLIDAY", "RAIN", "CUSTOM"]).optional(),
+
+  productionBundles: z.number().int().nonnegative().optional(),
+
+  pcsPerBundle: z.number().int().positive().optional(),
+
+  teamAFullEmployeeIds: z.array(z.string().min(1)).optional(),
+
+  teamAHalfEmployeeIds: z.array(z.string().min(1)).optional(),
+
+  teamARainAmount: z.number().nonnegative().optional(),
+
+  notes: z.string().max(500).optional(),
+});
+
+export type UpdatePayrollDailyInput = z.infer<typeof updatePayrollDailySchema>;

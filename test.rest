@@ -145,7 +145,6 @@ GET http://localhost:3000/api/payroll/periods
 
 ###
 POST http://localhost:3000/api/payroll/periods/cmuygr1cy0000qsv7ageza4xb/calculate
-
 ###
 GET http://localhost:3000/api/payroll/periods/cmuygr1cy0000qsv7ageza4xb/report
 
@@ -153,3 +152,40 @@ GET http://localhost:3000/api/payroll/periods/cmuygr1cy0000qsv7ageza4xb/report
 POST http://localhost:3000/api/payroll/periods/cmuygr1cy0000qsv7ageza4xb/finalize
 
 ###
+GET http://localhost:3000/api/payroll/settings
+
+###
+PATCH http://localhost:3000/api/payroll/settings
+Content-Type: application/json
+
+{
+  "teamAPricePerPcs": 130,
+  "teamADivisor": 5,
+  "teamBDailyRate": 30000
+}
+
+###
+
+GET    /api/payroll/periods
+
+###
+POST http://localhost:3000/api/payroll/periods
+Content-Type: application/json
+
+{
+  "startDate": "2026-10-01",
+  "endDate": "2026-10-15"
+}
+
+###
+
+GET    /api/payroll/periods/:id
+
+POST   /api/payroll/daily
+PATCH  /api/payroll/daily/:id
+DELETE /api/payroll/daily/:id
+
+POST   /api/payroll/periods/:id/calculate
+POST   /api/payroll/periods/:id/finalize
+
+GET    /api/payroll/periods/:id/report

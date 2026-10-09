@@ -3,6 +3,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import {
   createPayrollDailySchema,
   createPayrollPeriodSchema,
+  updatePayrollDailySchema,
 } from "./payroll.schema.js";
 
 import {
@@ -13,6 +14,8 @@ import {
   getPayrollPeriodById,
   getPayrollPeriods,
   getPayrollReport,
+  updatePayrollDaily,
+  deletePayrollDaily,
 } from "./payroll.service.js";
 
 export async function storePayrollPeriod(
@@ -112,6 +115,40 @@ export async function payrollReport(
   reply: FastifyReply,
 ) {
   const result = await getPayrollReport(request.params.id);
+
+  return reply.send({
+    success: true,
+    data: result,
+  });
+}
+
+export async function updatePayrollDailyController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const { id } = request.params as {
+    id: string;
+  };
+
+  const input = updatePayrollDailySchema.parse(request.body);
+
+  const result = await updatePayrollDaily(id, input);
+
+  return reply.send({
+    success: true,
+    data: result,
+  });
+}
+
+export async function deletePayrollDailyController(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const { id } = request.params as {
+    id: string;
+  };
+
+  const result = await deletePayrollDaily(id);
 
   return reply.send({
     success: true,

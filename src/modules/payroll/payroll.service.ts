@@ -8,6 +8,9 @@ import {
   distributeTeamAPay,
 } from "./payroll.calculator.js";
 
+import { UpdatePayrollDailyInput } from "./payroll.schema.js";
+import { getPayrollSettings } from "./settings/payroll-settings.service.js";
+
 interface CreatePayrollDailyInput {
   payrollPeriodId: string;
   date: Date;
@@ -683,11 +686,7 @@ export async function calculatePayrollPeriod(periodId: string) {
     include: {
       dailyRecords: {
         include: {
-          employeeDetails: {
-            include: {
-              employee: true,
-            },
-          },
+          employeeDetails: true,
         },
       },
     },
@@ -703,9 +702,9 @@ export async function calculatePayrollPeriod(periodId: string) {
 
   if (period.status === "FINALIZED") {
     throw new AppError(
-      "Periode payroll sudah difinalisasi",
+      "Payroll sudah FINALIZED",
       400,
-      "PAYROLL_PERIOD_FINALIZED",
+      "PAYROLL_ALREADY_FINALIZED",
     );
   }
 
@@ -718,7 +717,7 @@ export async function calculatePayrollPeriod(periodId: string) {
     return periodTotal + dailyTotal;
   }, 0);
 
-  const updated = await prisma.payrollPeriod.update({
+  return prisma.payrollPeriod.update({
     where: {
       id: periodId,
     },
@@ -740,8 +739,6 @@ export async function calculatePayrollPeriod(periodId: string) {
       },
     },
   });
-
-  return updated;
 }
 
 export async function finalizePayrollPeriod(periodId: string) {
@@ -768,7 +765,7 @@ export async function finalizePayrollPeriod(periodId: string) {
 
   if (period.status === "FINALIZED") {
     throw new AppError(
-      "Periode payroll sudah difinalisasi",
+      "Payroll sudah FINALIZED",
       400,
       "PAYROLL_ALREADY_FINALIZED",
     );
@@ -778,8 +775,23 @@ export async function finalizePayrollPeriod(periodId: string) {
     throw new AppError(
       "Belum ada data payroll harian",
       400,
-      "NO_PAYROLL_DAILY_RECORD",
+      "NO_DAILY_PAYROLL",
     );
+  }
+
+  /*
+   * Setiap daily record harus memiliki
+   * minimal satu detail karyawan.
+   */
+
+  for (const daily of period.dailyRecords) {
+    if (daily.employeeDetails.length === 0) {
+      throw new AppError(
+        `Payroll tanggal ${daily.date.toISOString().slice(0, 10)} belum memiliki detail karyawan`,
+        400,
+        "INCOMPLETE_DAILY_PAYROLL",
+      );
+    }
   }
 
   const totalAmount = period.dailyRecords.reduce((periodTotal, dailyRecord) => {
@@ -930,5 +942,345 @@ export async function getPayrollReport(periodId: string) {
     },
 
     employees: Array.from(employeeSummary.values()),
+  };
+}
+
+export async function updatePayrollDaily(
+  dailyRecordId: string,
+  input: UpdatePayrollDailyInput,
+) {
+  const existing = await prisma.payrollDailyRecord.findUnique({
+    where: {
+      id: dailyRecordId,
+    },
+    include: {
+      payrollPeriod: true,
+    },
+  });
+
+  if (!existing) {
+    throw new AppError(
+      "Data payroll harian tidak ditemukan",
+      404,
+      "PAYROLL_DAILY_NOT_FOUND",
+    );
+  }
+
+  if (existing.payrollPeriod.status === "FINALIZED") {
+    throw new AppError(
+      "Payroll sudah FINALIZED dan tidak dapat diubah",
+      400,
+      "PAYROLL_ALREADY_FINALIZED",
+    );
+  }
+
+  /*
+   * Untuk menjaga konsistensi kalkulasi,
+   * cara paling aman adalah menghapus detail lama
+   * lalu membuat ulang berdasarkan input terbaru.
+   */
+
+  const dayType = input.dayType ?? existing.dayType;
+
+  const productionBundles =
+    input.productionBundles ?? existing.productionBundles ?? undefined;
+
+  const pcsPerBundle = input.pcsPerBundle ?? existing.pcsPerBundle ?? undefined;
+
+  const fullEmployeeIds = input.teamAFullEmployeeIds ?? [];
+
+  const halfEmployeeIds = input.teamAHalfEmployeeIds ?? [];
+
+  const settings = await getPayrollSettings();
+
+  /*
+   * Validasi hari normal.
+   */
+
+  if (
+    dayType === "NORMAL" &&
+    (productionBundles === undefined || pcsPerBundle === undefined)
+  ) {
+    throw new AppError(
+      "Produksi dan pcs per ikat wajib diisi untuk hari normal",
+      400,
+      "PRODUCTION_REQUIRED",
+    );
+  }
+
+  /*
+   * Validasi hari hujan.
+   */
+
+  if (dayType === "RAIN" && input.teamARainAmount === undefined) {
+    throw new AppError(
+      "Nominal Team A untuk hari hujan wajib diisi",
+      400,
+      "RAIN_AMOUNT_REQUIRED",
+    );
+  }
+
+  return prisma.$transaction(async (tx) => {
+    await tx.payrollEmployeeDetail.deleteMany({
+      where: {
+        dailyRecordId,
+      },
+    });
+
+    let teamAAmount = 0;
+
+    /*
+     * NORMAL
+     */
+
+    if (
+      dayType === "NORMAL" &&
+      productionBundles !== undefined &&
+      pcsPerBundle !== undefined
+    ) {
+      const calculation = calculateTeamAPay({
+        productionBundles,
+        pcsPerBundle,
+        pricePerPcs: Number(settings.teamAPricePerPcs),
+        divisor: Number(settings.teamADivisor),
+        fullWorkerCount: fullEmployeeIds.length,
+        halfWorkerCount: halfEmployeeIds.length,
+      });
+
+      teamAAmount = calculation.baseAmount;
+    }
+
+    /*
+     * RAIN
+     *
+     * Asumsi V1:
+     * teamARainAmount adalah total dana Team A.
+     *
+     * pekerja full = bobot 1
+     * pekerja half = bobot 0.5
+     */
+
+    if (dayType === "RAIN" && input.teamARainAmount !== undefined) {
+      teamAAmount = input.teamARainAmount;
+    }
+
+    /*
+     * Ambil employee Team A.
+     */
+
+    const employees = await tx.employee.findMany({
+      where: {
+        status: "ACTIVE",
+      },
+    });
+
+    const employeeMap = new Map(
+      employees.map((employee) => [employee.id, employee]),
+    );
+
+    /*
+     * Validasi duplicate employee.
+     */
+
+    const selectedIds = [...fullEmployeeIds, ...halfEmployeeIds];
+
+    if (new Set(selectedIds).size !== selectedIds.length) {
+      throw new AppError(
+        "Karyawan Team A tidak boleh dipilih dua kali",
+        400,
+        "DUPLICATE_TEAM_A_EMPLOYEE",
+      );
+    }
+
+    /*
+     * Validasi semua employee Team A.
+     */
+
+    for (const employeeId of selectedIds) {
+      const employee = employeeMap.get(employeeId);
+
+      if (!employee) {
+        throw new AppError(
+          `Karyawan ${employeeId} tidak ditemukan`,
+          400,
+          "EMPLOYEE_NOT_FOUND",
+        );
+      }
+
+      if (employee.team !== "TEAM_A") {
+        throw new AppError(
+          `${employee.name} bukan anggota Team A`,
+          400,
+          "INVALID_TEAM_A_EMPLOYEE",
+        );
+      }
+    }
+
+    /*
+     * Distribusi Team A.
+     */
+
+    const totalWeight = fullEmployeeIds.length + halfEmployeeIds.length * 0.5;
+
+    if (selectedIds.length > 0 && totalWeight <= 0) {
+      throw new AppError(
+        "Pembagian gaji Team A tidak valid",
+        400,
+        "INVALID_TEAM_A_DISTRIBUTION",
+      );
+    }
+
+    if (selectedIds.length > 0) {
+      const unitAmount = teamAAmount / totalWeight;
+
+      for (const employeeId of fullEmployeeIds) {
+        await tx.payrollEmployeeDetail.create({
+          data: {
+            dailyRecordId,
+            employeeId,
+            attendanceStatus: "PRESENT",
+            baseAmount: unitAmount,
+            finalAmount: unitAmount,
+            isReplacement: false,
+          },
+        });
+      }
+
+      for (const employeeId of halfEmployeeIds) {
+        const amount = unitAmount / 2;
+
+        await tx.payrollEmployeeDetail.create({
+          data: {
+            dailyRecordId,
+            employeeId,
+            attendanceStatus: "PRESENT",
+            baseAmount: amount,
+            finalAmount: amount,
+            isReplacement: false,
+          },
+        });
+      }
+    }
+
+    /*
+     * Team B
+     */
+
+    const attendance = await tx.attendance.findMany({
+      where: {
+        date: existing.date,
+      },
+      include: {
+        employee: true,
+      },
+    });
+
+    for (const record of attendance) {
+      if (
+        record.employee.team !== "TEAM_B" ||
+        record.employee.status !== "ACTIVE"
+      ) {
+        continue;
+      }
+
+      if (record.status === "PRESENT") {
+        await tx.payrollEmployeeDetail.create({
+          data: {
+            dailyRecordId,
+            employeeId: record.employeeId,
+            attendanceStatus: "PRESENT",
+            baseAmount: settings.teamBDailyRate,
+            finalAmount: settings.teamBDailyRate,
+            isReplacement: false,
+          },
+        });
+      }
+    }
+
+    /*
+     * Update daily record.
+     */
+
+    const updated = await tx.payrollDailyRecord.update({
+      where: {
+        id: dailyRecordId,
+      },
+      data: {
+        dayType,
+
+        productionBundles: productionBundles ?? null,
+
+        pcsPerBundle: pcsPerBundle ?? null,
+
+        teamAAmount,
+
+        teamBAmount:
+          attendance.filter(
+            (item) =>
+              item.employee.team === "TEAM_B" && item.status === "PRESENT",
+          ).length * Number(settings.teamBDailyRate),
+
+        teamAManualOverride: dayType === "RAIN",
+
+        teamARainAmount:
+          dayType === "RAIN" ? (input.teamARainAmount ?? null) : null,
+
+        notes: input.notes ?? existing.notes,
+      },
+      include: {
+        employeeDetails: {
+          include: {
+            employee: true,
+          },
+        },
+      },
+    });
+
+    return updated;
+  });
+}
+
+export async function deletePayrollDaily(dailyRecordId: string) {
+  const existing = await prisma.payrollDailyRecord.findUnique({
+    where: {
+      id: dailyRecordId,
+    },
+    include: {
+      payrollPeriod: true,
+    },
+  });
+
+  if (!existing) {
+    throw new AppError(
+      "Data payroll harian tidak ditemukan",
+      404,
+      "PAYROLL_DAILY_NOT_FOUND",
+    );
+  }
+
+  if (existing.payrollPeriod.status === "FINALIZED") {
+    throw new AppError(
+      "Payroll sudah FINALIZED dan tidak dapat dihapus",
+      400,
+      "PAYROLL_ALREADY_FINALIZED",
+    );
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.payrollEmployeeDetail.deleteMany({
+      where: {
+        dailyRecordId,
+      },
+    });
+  });
+
+  await prisma.payrollDailyRecord.delete({
+    where: {
+      id: dailyRecordId,
+    },
+  });
+
+  return {
+    message: "Payroll harian berhasil dihapus",
   };
 }
