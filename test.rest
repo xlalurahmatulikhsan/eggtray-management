@@ -1,161 +1,145 @@
-POST http://localhost:3000/api/employees
+@baseUrl = http://localhost:3000
+
+### --------- Pengujian Employee -------------
+@ID_EMPLOYEE = cmv58y52o00016ov7k2ej9b73
+### Buat employee
+POST {{baseUrl}}/api/employees
 Content-Type: application/json
 
 {
-  "name": "Wirawadi",
+  "name": "Test Employee F",
   "team": "TEAM_A"
 }
 
+### Ambil semua employee
+GET {{baseUrl}}/api/employees
 
-###
-GET http://localhost:3000/api/employees
+### Ambil satu employee
+GET {{baseUrl}}/api/employees/{{ID_EMPLOYEE}}
 
-###
-GET http://localhost:3000/api/employees/cmua6yb040000zsv7atqfrptv
-
-###
-PATCH http://localhost:3000/api/employees/cmua6yb040000zsv7atqfrptv
+### Update employee
+PATCH {{baseUrl}}/api/employees/{{ID_EMPLOYEE}}
 Content-Type: application/json
 
 {
-  "name": "M Gilang",
+  "name": "Test Employee Updated",
+  "status": "INACTIVE"
 }
 
-###
-DELETE http://localhost:3000/api/employees/cmuveagrp0000ywv7z4sqedme
+### Hapus employee
+DELETE {{baseUrl}}/api/employees/{{ID_EMPLOYEE}}
 
 
-
+### --------- Pengujian Attendance -------------
 ### Create Attendance
-POST http://localhost:3000/api/attendance
+@ATTENDANCE_ID = cmv58yelw00026ov7fd73mnyx
+
+POST {{baseUrl}}/api/attendance
 Content-Type: application/json
 
 {
-  "employeeId": "cmuygsq3z0001qsv7j7rwja3v",
-  "date": "2026-10-06T00:00:00.000Z",
+  "employeeId": "{{EMPLOYEE_ID_A}}",
+  "date": "2026-10-12T00:00:00.000Z",
   "status": "PRESENT",
-  "notes": "Masuk tepat waktu"
+  "notes": "Integration test attendance"
 }
 
-###
-GET http://localhost:3000/api/attendance
+### Ambil daftar attendance
+GET {{baseUrl}}/api/attendance
 
-###
-GET http://localhost:3000/api/attendance?date=2026-10-06T00:00:00.000Z
+### Ambil detail attendance berdasarkan date
+GET {{baseUrl}}/api/attendance?date=2026-10-12T00:00:00.000Z
 
-###
-GET http://localhost:3000/api/attendance?employeeId=cmua6yb040000zsv7atqfrptv
+### Ambil detail attendance berdasarkan employeeId
+GET {{baseUrl}}/api/attendance?employeeId={{{{ID_EMPLOYEE}}}}
 
-
-###
-POST http://localhost:3000/api/products
+### Update attendance berdasarkan Id attendance
+PATCH {{baseUrl}}/api/attendance/{{ATTENDANCE_ID}}
 Content-Type: application/json
 
 {
-  "name": "Papan Telur Baru",
+  "status": "ABSENT",
+  "notes": "Updated during testing"
+}
+
+### --------- Pengujian Product -------------
+@PRODUCT_ID = cmv59q3t800036ov7xilud6aq
+### Buat Product
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Test Egg Tray",
   "pcsPerBundle": 50
 }
 
-###
-GET http://localhost:3000/api/products
+### Ambil semua product
+GET {{baseUrl}}/api/products
+
+### Ambil satu product
+GET {{baseUrl}}/api/products/{{PRODUCT_ID}}
 
 ###
-PATCH http://localhost:3000/api/products/cmuwbr63y0001rov779o5mdl0
+PATCH {{baseUrl}}/api/products/{{PRODUCT_ID}}
 Content-Type: application/json
 
 {
-  "name": "Papan Telur Baru",
-  "pcsPerBundle": 50
+  "name": "Test Egg Tray Updated",
+  "pcsPerBundle": 60,
+  "isActive": false
 }
 
 
-
-###
-POST http://localhost:3000/api/productions
+### --------- Pengujian Productions -------------
+POST {{baseUrl}}/api/productions
 Content-Type: application/json
 
 {
-  "productId": "cmuxxcijp0000c4v7fv1ohmd4",
-  "date": "2026-10-07",
-  "bundleQuantity": 150
+  "productId": "{{PRODUCT_ID}}",
+  "date": "2026-10-12T00:00:00.000Z",
+  "bundleQuantity": 10,
+  "notes": "Test production"
 }
 
-###
-GET http://localhost:3000/api/inventory
+### --------- Pengujian Inventory -------------
+### Lihat seluruh stok
+GET {{baseUrl}}/api/inventory
 
-###
-GET http://localhost:3000/api/inventory/cmuxxcijp0000c4v7fv1ohmd4/transactions
+### Lihat stok Product berdasarkan Id
+GET {{baseUrl}}/api/inventory/{{PRODUCT_ID}}
 
-###
-POST http://localhost:3000/api/inventory/damage
+### Lihat riwayat transaksi
+GET {{baseUrl}}/api/inventory/{{PRODUCT_ID}}/transactions?limit=20
+
+### Catat stok rusak
+POST {{baseUrl}}/api/inventory/damage
 Content-Type: application/json
 
 {
-  "productId": "cmuxxcijp0000c4v7fv1ohmd4",
-  "bundleQuantity": 5,
-  "notes": "Rusak terkena hujan"
+  "productId": "{{PRODUCT_ID}}",
+  "bundleQuantity": 1,
+  "notes": "Test damaged stock"
 }
 
-###
-POST http://localhost:3000/api/inventory/adjustment
+### --------- Pengujian Adjustment -------------
+### Penyesuaian stok menambahkan 1 bundle / mengurangi 1 bundle
+POST {{baseUrl}}/api/inventory/adjustment
 Content-Type: application/json
 
 {
-  "productId": "cmuxxcijp0000c4v7fv1ohmd4",
+  "productId": "{{PRODUCT_ID}}",
   "type": "ADJUSTMENT_IN",
-  "bundleQuantity": 2,
-  "notes": "Hasil stock opname"
+  "bundleQuantity": 1,
+  "notes": "Test stock adjustment"
 }
 
-###
 
-### Buat periode
-POST http://localhost:3000/api/payroll/periods
-Content-Type: application/json
+### --------- Pengujian Payroll -------------
+### Lihat Pengaturan Payroll
+GET {{baseUrl}}/api/payroll/settings
 
-{
-  "startDate": "2026-10-01",
-  "endDate": "2026-10-15"
-}
-
-### memasukkan payroll harian
-POST http://localhost:3000/api/payroll/daily
-Content-Type: application/json
-
-{
-  "payrollPeriodId": "cmuygr1cy0000qsv7ageza4xb",
-  "date": "2026-10-08",
-  "dayType": "NORMAL",
-  "productionBundles": 141,
-  "pcsPerBundle": 50,
-  "teamAFullEmployeeIds": [
-    "cmuzm5124000c3cv7a9c3r8tr",
-    "cmuzltoh200073cv7h401i740",
-    "cmuzltcvr00063cv7o7nlbhvi",
-    "cmuzlt5pu00053cv7zyp6wzzb"
-  ],
-  "teamAHalfEmployeeIds": [
-    "cmuzlsyaw00043cv7b0vnybb5",
-    "cmuygsq3z0001qsv7j7rwja3v"
-  ]
-}
-
-###
-GET http://localhost:3000/api/payroll/periods
-
-###
-POST http://localhost:3000/api/payroll/periods/cmuygr1cy0000qsv7ageza4xb/calculate
-###
-GET http://localhost:3000/api/payroll/periods/cmuygr1cy0000qsv7ageza4xb/report
-
-###
-POST http://localhost:3000/api/payroll/periods/cmuygr1cy0000qsv7ageza4xb/finalize
-
-###
-GET http://localhost:3000/api/payroll/settings
-
-###
-PATCH http://localhost:3000/api/payroll/settings
+### Ubah Pengaturan Payroll
+PATCH {{baseUrl}}/api/payroll/settings
 Content-Type: application/json
 
 {
@@ -164,28 +148,56 @@ Content-Type: application/json
   "teamBDailyRate": 30000
 }
 
-###
-
-GET    /api/payroll/periods
-
-###
-POST http://localhost:3000/api/payroll/periods
+### Buat Periode Payroll
+POST {{baseUrl}}/api/payroll/periods
 Content-Type: application/json
 
 {
-  "startDate": "2026-10-01",
-  "endDate": "2026-10-15"
+  "startDate": "2026-11-01T00:00:00.000Z",
+  "endDate": "2026-11-15T00:00:00.000Z"
 }
 
-###
+### Lihat Payrol Periode
+GET {{baseUrl}}/api/payroll/periods
 
-GET    /api/payroll/periods/:id
+@PAYROLL_PERIOD_ID = cmv5cyfqb000qm0v7af1nzzhj
+@EMPLOYEE_ID_A = cmv58y52o00016ov7k2ej9b73
+@EMPLOYEE_ID_B = cmv5bkl850009m0v7gli9r7d2
+@EMPLOYEE_ID_C = cmv5bkqob000am0v7c652id35
+@EMPLOYEE_ID_D = cmv5bkyc8000bm0v7r1htsv8l
+@EMPLOYEE_ID_E = cmv5bl22u000cm0v7ja1anqq7
+@EMPLOYEE_ID_F = cmv5bl70q000dm0v72u1tdjgb
 
-POST   /api/payroll/daily
-PATCH  /api/payroll/daily/:id
-DELETE /api/payroll/daily/:id
+### memasukkan Payroll harian
+POST {{baseUrl}}/api/payroll/daily
+Content-Type: application/json
 
-POST   /api/payroll/periods/:id/calculate
-POST   /api/payroll/periods/:id/finalize
+{
+  "payrollPeriodId": "{{PAYROLL_PERIOD_ID}}",
+  "date": "2026-11-12T00:00:00.000Z",
+  "dayType": "NORMAL",
+  "productionBundles": 100,
+  "pcsPerBundle": 50,
+  "teamAFullEmployeeIds": [
+    "{{EMPLOYEE_ID_A}}",
+    "{{EMPLOYEE_ID_B}}",
+    "{{EMPLOYEE_ID_C}}",
+    "{{EMPLOYEE_ID_D}}"
+  ],
+  "teamAHalfEmployeeIds": [
+    "{{EMPLOYEE_ID_E}}",
+    "{{EMPLOYEE_ID_F}}"
+  ]
+}
 
-GET    /api/payroll/periods/:id/report
+### Hitung Payroll
+POST {{baseUrl}}/api/payroll/periods/{{PAYROLL_PERIOD_ID}}/calculate
+
+### Laporan Payroll
+GET {{baseUrl}}/api/payroll/periods/{{PAYROLL_PERIOD_ID}}/report
+
+### Finalisasi Payroll
+POST {{baseUrl}}/api/payroll/periods/{{PAYROLL_PERIOD_ID}}/finalize
+
+### Lihat Payroll Periode berdasarkan Id
+GET {{baseUrl}}/api/payroll/periods/{{PAYROLL_PERIOD_ID}}
