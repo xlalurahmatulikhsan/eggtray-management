@@ -5,5 +5,10 @@
     "target": "ES2023",
     "strict": true,
     "esModuleInterop": true,
-  }
+    "rootDir": ".",
+    "outDir": "./dist",
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*.ts", "generated/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }
