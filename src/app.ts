@@ -1,5 +1,5 @@
 import Fastify from "fastify";
-import { employeeRoutes } from "./modules/employess/employee.route.js";
+import { employeeRoutes } from "./modules/employees/employee.route.js";
 import { AppError } from "./utils/app-error.js";
 import { attendanceRoutes } from "./modules/attendance/attendance.route.js";
 import { productRoutes } from "./modules/products/product.route.js";
